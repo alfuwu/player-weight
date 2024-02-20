@@ -43,12 +43,17 @@ public class WeightMod implements ModInitializer {
 		for (WeightConfig.WeightTuple tuple : CONFIG.modifiers)
 			if (find(item, tuple.regex, tuple.text.toLowerCase()) || find(item, tuple.regex, tuple.text.replace(" ", "_").toLowerCase()))
 				itemWeight = CONFIG.weightModifiersAreMultiplicative || tuple.text.equalsIgnoreCase("air") ? itemWeight * tuple.modifier * item.getCount(): itemWeight + (tuple.modifier * item.getCount());
-		if (item.hasNbt() && item.getNbt().contains("BlockEntityTag", NbtElement.COMPOUND_TYPE) && item.getSubNbt("BlockEntityTag").contains("Items", NbtElement.LIST_TYPE)) {
+		if (item.hasNbt()) {
 			try {
-				NbtList nbtList = item.getSubNbt("BlockEntityTag").getList("Items", NbtElement.COMPOUND_TYPE);
+				NbtList nbtList = null;
+				if (item.getNbt().contains("BlockEntityTag", NbtElement.COMPOUND_TYPE) && item.getSubNbt("BlockEntityTag").contains("Items", NbtElement.LIST_TYPE)) // Shulker boxes, chests, barrels, etcetera
+					nbtList = item.getSubNbt("BlockEntityTag").getList("Items", NbtElement.COMPOUND_TYPE);
+				else if (item.getNbt().contains("Items", NbtElement.LIST_TYPE)) // Bundles
+					nbtList = item.getNbt().getList("Items", NbtElement.COMPOUND_TYPE);
 
-				for (NbtElement compound : nbtList)
-					itemWeight += calculateItemWeight(ItemStack.fromNbt((NbtCompound) compound));
+				if (nbtList != null)
+					for (NbtElement compound : nbtList)
+						itemWeight += calculateItemWeight(ItemStack.fromNbt((NbtCompound) compound));
 			} catch (Exception ignored) { } // Somebody messed with NBT data and the item's inventory wasn't a list of NBT compounds, ignore
 		}
 		return itemWeight;
