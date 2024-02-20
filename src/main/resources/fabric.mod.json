@@ -1,0 +1,42 @@
+{
+	"schemaVersion": 1,
+	"id": "player-weight",
+	"version": "${version}",
+	"name": "Player Weight",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Alfred"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"accessWidener": "player-weight.accesswidener",
+	"license": "MIT",
+	"icon": "assets/player-weight/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.alfred.weight.WeightMod"
+		],
+		"client": [
+			"com.alfred.weight.WeightClient"
+		],
+		"modmenu": [
+			"com.alfred.weight.compat.ModMenuIntegration"
+		]
+	},
+	"mixins": [
+      "player-weight.mixins.json",
+		{
+			"config": "player-weight.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.15.0",
+		"minecraft": "~1.20.4",
+		"java": ">=17",
+		"fabric-api": "*"
+	}
+}
