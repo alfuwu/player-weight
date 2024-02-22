@@ -1,3 +1,22 @@
 {
-  "death.attack.too_heavy": "%s was broken by the load"
+  "death.attack.too_heavy": "%s was broken by the load",
+  "death.attack.too_heavy.player": "%s was broken by the load at the hand of %s",
+  "warning.player-weight.encumbered": "You're encumbered!",
+  "config.player-weight.displayType": "Display Type",
+  "config.player-weight.weightWarningType": "Weight Warning Type",
+  "config.player-weight.globalDefaultWeight": "Global Default Weight",
+  "config.player-weight.defaultMaxWeight": "Default Max Weight",
+  "config.player-weight.weightModifiersAreMultiplicative": "Multiplicative Weight Modifiers",
+  "config.player-weight.affectsCreativeModePlayers": "Affect Creative Mode Players",
+  "config.player-weight.modifiers": "Weight Modifiers",
+  "config.WeightTuple": "Weight Modifier",
+  "config.WeightTuple.text": "Text Match",
+  "config.WeightTuple.modifier": "Weight Value",
+  "config.WeightTuple.regex": "Use RegEx",
+  "config.player-weight.weightPunishments": "Punishments",
+  "config.WeightPunishment": "Punishment",
+  "config.WeightPunishment.type": "Type",
+  "config.WeightPunishment.value": "Value",
+  "config.WeightPunishment.begin": "Begin At",
+  "config.WeightPunishment.scaleWithWeight": "Should Scale With Weight"
 }

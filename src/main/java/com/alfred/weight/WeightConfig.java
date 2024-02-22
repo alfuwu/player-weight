@@ -4,6 +4,7 @@ import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
+import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Comment;
 
 import java.util.Arrays;
 import java.util.List;
@@ -11,6 +12,11 @@ import java.util.List;
 @SuppressWarnings("unused")
 @Config(name = "player-weight")
 public class WeightConfig implements ConfigData {
+    @ConfigEntry.Gui.EnumHandler
+    public DisplayType displayType = DisplayType.NUMBERS;
+    @ConfigEntry.Gui.EnumHandler
+    @Comment("Useful if the server this mod is on is vanilla")
+    public WarningType weightWarningType = WarningType.NONE;
     public float globalDefaultWeight = 1.0f;
     public float defaultMaxWeight = 300.0f;
     public boolean weightModifiersAreMultiplicative = true;
@@ -23,10 +29,10 @@ public class WeightConfig implements ConfigData {
     );
     // Can't think of a good name, gonna leave it as 'WeightPunishment(s)' for now
     public final List<WeightPunishment> weightPunishments = Arrays.asList(
-            new WeightPunishment(PunishmentType.SPEED, 0.9f, 0.8f, null, true),
-            new WeightPunishment(PunishmentType.SPEED, 0.5f, 1.25f, null, true),
-            new WeightPunishment(PunishmentType.DAMAGE_PER_SECOND, 1.0f, 2f, null, true),
-            new WeightPunishment(PunishmentType.KILL_MOUNT, null, 2f, null, null)
+            new WeightPunishment(PunishmentType.SPEED, 0.9f, 0.8f, true),
+            new WeightPunishment(PunishmentType.SPEED, 0.5f, 1.25f, true),
+            new WeightPunishment(PunishmentType.DAMAGE_PER_SECOND, 1.0f, 2f, true),
+            new WeightPunishment(PunishmentType.KILL_MOUNT, null, 2f, null)
     );
 
     public static WeightConfig getInstance() {
@@ -58,20 +64,20 @@ public class WeightConfig implements ConfigData {
     }
 
     public static class WeightPunishment {
+        @ConfigEntry.Gui.EnumHandler
         public PunishmentType type;
         public Float value;
+        @Comment("This is a percentage of the player's max weight in which the punishment will take effect")
         public Float begin;
-        public Float end;
         public Boolean scaleWithWeight;
 
         WeightPunishment() {
-            this(PunishmentType.SPEED, 1.0f, 0.0f, null, false);
+            this(PunishmentType.SPEED, 1.0f, 0.0f, false);
         }
-        WeightPunishment(PunishmentType type, Float value, Float begin, Float end, Boolean scaleWithWeight) {
+        WeightPunishment(PunishmentType type, Float value, Float begin, Boolean scaleWithWeight) {
             this.type = type;
             this.value = value;
             this.begin = begin;
-            this.end = end;
             this.scaleWithWeight = scaleWithWeight;
         }
     }
@@ -81,6 +87,17 @@ public class WeightConfig implements ConfigData {
         KILL_MOUNT,
         PREVENT_MOUNT,
         DAMAGE_PER_SECOND,
-        DAMAGE_PER_SECOND_MOUNT;
+        DAMAGE_PER_SECOND_MOUNT
+    }
+
+    public enum DisplayType {
+        NUMBERS,
+        ICON
+    }
+
+    public enum WarningType {
+        NONE,
+        CENTERED_MESSAGE,
+        CHAT_MESSAGE
     }
 }

@@ -5,17 +5,24 @@ import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.fabricmc.api.ModInitializer;
 
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +31,8 @@ import java.util.regex.Pattern;
 public class WeightMod implements ModInitializer {
 	private static WeightConfig CONFIG;
 	public static final RegistryKey<DamageType> TOO_HEAVY = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, identifier("too_heavy"));
+	public static final Identifier WEIGHT_PACKET = identifier("player_weight_update");
+	public static final Identifier WEIGHT_MAX_PACKET = identifier("player_max_weight_update");
 
 	@Override
 	public void onInitialize() {
@@ -39,10 +48,10 @@ public class WeightMod implements ModInitializer {
 	}
 
 	public static float calculateItemWeight(ItemStack item) {
-		float itemWeight = CONFIG.globalDefaultWeight;
+		float itemWeight = CONFIG.globalDefaultWeight * item.getCount();
 		for (WeightConfig.WeightTuple tuple : CONFIG.modifiers)
 			if (find(item, tuple.regex, tuple.text.toLowerCase()) || find(item, tuple.regex, tuple.text.replace(" ", "_").toLowerCase()))
-				itemWeight = CONFIG.weightModifiersAreMultiplicative || tuple.text.equalsIgnoreCase("air") ? itemWeight * tuple.modifier * item.getCount(): itemWeight + (tuple.modifier * item.getCount());
+				itemWeight = CONFIG.weightModifiersAreMultiplicative || tuple.text.equalsIgnoreCase("air") ? itemWeight * tuple.modifier : itemWeight + (tuple.modifier * item.getCount());
 		if (item.hasNbt()) {
 			try {
 				NbtList nbtList = null;

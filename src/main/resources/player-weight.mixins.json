@@ -3,7 +3,7 @@
 	"package": "com.alfred.weight.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
-      "ServerPlayerEntityMixin"
+		"ServerPlayerEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
