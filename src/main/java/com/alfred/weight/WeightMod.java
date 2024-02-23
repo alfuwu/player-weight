@@ -33,6 +33,7 @@ public class WeightMod implements ModInitializer {
 	public static final RegistryKey<DamageType> TOO_HEAVY = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, identifier("too_heavy"));
 	public static final Identifier WEIGHT_PACKET = identifier("player_weight_update");
 	public static final Identifier WEIGHT_MAX_PACKET = identifier("player_max_weight_update");
+	public static final Identifier CREATIVE_MODE_UPDATE = identifier("creative_update");
 
 	@Override
 	public void onInitialize() {

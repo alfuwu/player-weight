@@ -1,8 +1,6 @@
 package com.alfred.weight.mixin.client;
 
 import com.alfred.weight.WeightClient;
-import com.alfred.weight.WeightConfig;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.AbstractInventoryScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
@@ -20,11 +18,8 @@ public abstract class InventoryScreenMixin extends AbstractInventoryScreen<Playe
         super(screenHandler, playerInventory, text);
     }
 
-    @Inject(method = "render", at = @At("TAIL"))
+    @Inject(method = "render", at = @At("RETURN"))
     private void displayCurrentWeight(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (WeightConfig.getInstance().displayType == WeightConfig.DisplayType.NUMBERS) // TODO: make text a smaller font
-            context.drawText(this.textRenderer, WeightClient.currentWeight + "/" + WeightClient.maxWeight, this.x + 147 - (this.textRenderer.getWidth(WeightClient.currentWeight + "/" + 0.0f) / 2), this.y + 68, 4210752, false);
-        else // Not implemented yet
-            return;
+        WeightClient.render(context, this.textRenderer, this.x, this.y);
     }
 }

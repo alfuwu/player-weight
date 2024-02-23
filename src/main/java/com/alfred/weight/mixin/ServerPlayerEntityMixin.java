@@ -43,8 +43,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Se
 	@Unique private float currentWeight = 0.0f;
 	@Unique private Float maxWeight = null;
 	@Unique private boolean oldBl = false;
+	@Unique private boolean oldAffectsCreative = false;
 	@Unique private static final UUID SPEED_WEIGHT_UUID = UUID.fromString("2E5B6895-58B9-4E20-871F-AD0554C3012E");
-	@Unique private final EntityAttributeModifier playerSpeedModifier = new EntityAttributeModifier(SPEED_WEIGHT_UUID, "Player weight speed modifier", 0.0, EntityAttributeModifier.Operation.MULTIPLY_TOTAL);
+	@Unique private EntityAttributeModifier playerSpeedModifier = new EntityAttributeModifier(SPEED_WEIGHT_UUID, "Player weight speed modifier", 0.0, EntityAttributeModifier.Operation.MULTIPLY_TOTAL);
 	@Unique private List<List<ItemStack>> oldInventory = new ArrayList<>();
 
 	public ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
@@ -67,7 +68,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Se
 
 	@Override
 	public float playerWeight$getMaxWeight() {
-		return this.maxWeight != null ? this.maxWeight : WeightConfig.getInstance().defaultMaxWeight;
+		return this.maxWeight != null && this.maxWeight != 0 ? this.maxWeight : WeightConfig.getInstance().defaultMaxWeight != 0 ? WeightConfig.getInstance().defaultMaxWeight : 1;
 	}
 
 	@Override
@@ -115,21 +116,32 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Se
 		WeightConfig config = WeightConfig.getInstance();
 		EntityAttributeInstance moveSpeed = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
 
+		if (config.affectsCreativeModePlayers != this.oldAffectsCreative)
+			ServerPlayNetworking.send((ServerPlayerEntity) (Object) this, WeightMod.CREATIVE_MODE_UPDATE, new PacketByteBuf(Unpooled.copyBoolean(config.affectsCreativeModePlayers)));
+
 		boolean bl = config.affectsCreativeModePlayers || !this.isCreative();
 		if (!bl && moveSpeed != null && moveSpeed.getModifier(SPEED_WEIGHT_UUID) != null)
 			moveSpeed.removeModifier(SPEED_WEIGHT_UUID); // Remove any speed modifications done to the player when they're in creative mode
 
-		if (isEqual(this.oldInventory, this.getInventory().combinedInventory)) { // Inventory hasn't changed, don't do (expensive) inventory weight calculations
+		if (isEqual(this.oldInventory, this.getInventory().combinedInventory) && oldBl == this.isCreative() && config.affectsCreativeModePlayers == this.oldAffectsCreative) { // Inventory hasn't changed, don't do (expensive) inventory weight calculations
 			if (this.age % 20 == 0) {
 				for (WeightConfig.WeightPunishment punishment : config.weightPunishments) {
 					if (this.currentWeight > punishment.begin * this.playerWeight$getMaxWeight()) {
 						if (punishment.type == WeightConfig.PunishmentType.DAMAGE_PER_SECOND)
 							this.damage(WeightMod.tooHeavy(this.getServerWorld()), WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
-						else if (punishment.type == WeightConfig.PunishmentType.DAMAGE_PER_SECOND_MOUNT && this.hasVehicle() && this.getVehicle() instanceof LivingEntity livingVehicle)
-							livingVehicle.damage(WeightMod.tooHeavy(livingVehicle.getWorld()), WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
+						else if (punishment.type == WeightConfig.PunishmentType.DAMAGE_PER_SECOND_MOUNT && this.hasVehicle())
+							this.getVehicle().damage(WeightMod.tooHeavy(this.getVehicle().getWorld()), WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
+						else if (punishment.type == WeightConfig.PunishmentType.EXHAUSTION_PER_SECOND)
+							this.hungerManager.addExhaustion(WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
 					}
 				}
+			} else {
+				for (WeightConfig.WeightPunishment punishment : config.weightPunishments)
+					if (this.currentWeight > punishment.begin * this.playerWeight$getMaxWeight() && punishment.type == WeightConfig.PunishmentType.EXHAUSTION_PER_TICK)
+						this.hungerManager.addExhaustion(WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
 			}
+			oldBl = this.isCreative();
+			oldAffectsCreative = config.affectsCreativeModePlayers;
 			return;
 		} else {
 			this.oldInventory = new ArrayList<>();
@@ -141,33 +153,42 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Se
 			} // Copy inventory
 			this.calculateWeight();
 		}
-		if (bl || !oldBl) { // TODO: logic broken here, works when transitioning from Survival to Creative but not vice-versa
+		if (bl || this.oldBl != this.isCreative() || config.affectsCreativeModePlayers != this.oldAffectsCreative) {
 			float speedModifier = 1.0f;
 			if (this.age % 20 == 0) {
 				for (WeightConfig.WeightPunishment punishment : config.weightPunishments) {
 					if (this.currentWeight > punishment.begin * this.playerWeight$getMaxWeight()) {
 						if (punishment.type == WeightConfig.PunishmentType.DAMAGE_PER_SECOND)
 							this.damage(WeightMod.tooHeavy(this.getServerWorld()), WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
-						else if (punishment.type == WeightConfig.PunishmentType.DAMAGE_PER_SECOND_MOUNT && this.hasVehicle() && this.getVehicle() instanceof LivingEntity livingVehicle)
-							livingVehicle.damage(WeightMod.tooHeavy(livingVehicle.getWorld()), WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
+						else if (punishment.type == WeightConfig.PunishmentType.DAMAGE_PER_SECOND_MOUNT && this.hasVehicle())
+							this.getVehicle().damage(WeightMod.tooHeavy(this.getVehicle().getWorld()), WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
 						else if (punishment.type == WeightConfig.PunishmentType.SPEED)
 							speedModifier *= WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight);
+						else if (punishment.type == WeightConfig.PunishmentType.EXHAUSTION_PER_SECOND)
+							this.hungerManager.addExhaustion(WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
+						else if (punishment.type == WeightConfig.PunishmentType.EXHAUSTION_PER_TICK)
+							this.hungerManager.addExhaustion(WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
 					}
 				}
 			} else {
-				for (WeightConfig.WeightPunishment punishment : config.weightPunishments)
-					if (this.currentWeight > punishment.begin * this.playerWeight$getMaxWeight() && punishment.type == WeightConfig.PunishmentType.SPEED)
-						speedModifier *= WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight);
+				for (WeightConfig.WeightPunishment punishment : config.weightPunishments) {
+					if (this.currentWeight > punishment.begin * this.playerWeight$getMaxWeight()) {
+						if (punishment.type == WeightConfig.PunishmentType.SPEED)
+							speedModifier *= WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight);
+						else if (punishment.type == WeightConfig.PunishmentType.EXHAUSTION_PER_TICK)
+							this.hungerManager.addExhaustion(WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
+					}
+				}
 			}
 
 			if (playerSpeedModifier.getValue() != speedModifier && moveSpeed != null) {
-				moveSpeed.removeModifier(playerSpeedModifier.getId());
-				moveSpeed.addTemporaryModifier(
-						new EntityAttributeModifier(SPEED_WEIGHT_UUID, "Player weight speed modifier", speedModifier - 1.0f, EntityAttributeModifier.Operation.MULTIPLY_TOTAL)
-				);
+				moveSpeed.removeModifier(SPEED_WEIGHT_UUID);
+				playerSpeedModifier = new EntityAttributeModifier(SPEED_WEIGHT_UUID, "Player weight speed modifier", speedModifier - 1.0f, EntityAttributeModifier.Operation.MULTIPLY_TOTAL);
+				moveSpeed.addTemporaryModifier(playerSpeedModifier);
 			}
 		}
-		oldBl = bl;
+		oldBl = this.isCreative();
+		oldAffectsCreative = config.affectsCreativeModePlayers;
 	}
 
 	@Inject(method = "startRiding", at = @At("HEAD"), cancellable = true)
