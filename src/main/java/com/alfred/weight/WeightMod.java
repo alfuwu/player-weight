@@ -51,7 +51,7 @@ public class WeightMod implements ModInitializer {
 	public static float calculateItemWeight(ItemStack item) {
 		float itemWeight = CONFIG.globalDefaultWeight * item.getCount();
 		for (WeightConfig.WeightTuple tuple : CONFIG.modifiers)
-			if (find(item, tuple.regex, tuple.text.toLowerCase()) || find(item, tuple.regex, tuple.text.replace(" ", "_").toLowerCase()))
+			if (find(item, tuple.regex, tuple.text.replace(" ", "_")) || find(item, tuple.regex, tuple.text))
 				itemWeight = CONFIG.weightModifiersAreMultiplicative || tuple.text.equalsIgnoreCase("air") ? itemWeight * tuple.modifier : itemWeight + (tuple.modifier * item.getCount());
 		if (item.hasNbt()) {
 			try {
@@ -70,7 +70,7 @@ public class WeightMod implements ModInitializer {
 	}
 
 	private static boolean find(ItemStack item, boolean regex, String text) {
-		return Pattern.compile(regex ? text : Pattern.quote(text)).matcher(item.getItem().toString().toLowerCase()).find();
+		return regex ? item.getItem().toString().toLowerCase().contains(text.toLowerCase()) : Pattern.compile(text.toLowerCase()).matcher(item.getItem().toString().toLowerCase()).find();
 	}
 
 	public static float scale(ServerPlayerEntityAccessor player, float weight, float value, float start, boolean shouldScale) {

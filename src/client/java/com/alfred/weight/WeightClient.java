@@ -41,9 +41,10 @@ public class WeightClient implements ClientModInitializer {
 	}
 
 	public static void render(DrawContext context, TextRenderer textRenderer, int x, int y) {
-		if (WeightConfig.getInstance().displayType == WeightConfig.DisplayType.NUMBERS) // TODO: make text a smaller font
+		WeightConfig.DisplayType type = WeightConfig.getInstance().displayType;
+		if (type == WeightConfig.DisplayType.NUMBERS) // TODO: make text a smaller font
 			context.drawText(textRenderer, WeightClient.currentWeight + "/" + WeightClient.maxWeight, x + 147 - (textRenderer.getWidth(WeightClient.currentWeight + "/" + WeightClient.maxWeight) / 2), y + 68, 4210752, false);
-		else
+		else if (type == WeightConfig.DisplayType.ICON)
 			context.drawGuiTexture(ICONS[MathHelper.clamp(Math.round(WeightClient.currentWeight / (WeightClient.maxWeight != 0 ? WeightClient.maxWeight : 1) * (ICONS.length - 2)), 0, ICONS.length - 1)], x + 128, y + 61, 18, 18);
 	}
 }

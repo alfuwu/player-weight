@@ -23,9 +23,40 @@ public class WeightConfig implements ConfigData {
     public boolean affectsCreativeModePlayers = false;
     public final List<WeightTuple> modifiers = Arrays.asList(
             new WeightTuple("Air", 0.0f),
+            new WeightTuple("Netherite", 1.6f),
             new WeightTuple("Gold", 20.0f),
-            new WeightTuple("Diamond", 1.2f),
-            new WeightTuple("Golden (Pickaxe|Axe|Shovel|Hoe|Sword)", 0.1f, true)
+            new WeightTuple("Diamond|Emerald|Ruby|Sapphire|Gem", 1.2f, true),
+            new WeightTuple("Golden (Pickaxe|Axe|Shovel|Hoe|Sword)", 0.1f, true), // Undo the massive weight modifier that Gold would apply to these items
+            new WeightTuple("Iron|Steel|Copper|Amethyst|Titanium|Silver|Bronze", 1.15f, true),
+            new WeightTuple("Aluminum", 0.95f),
+            new WeightTuple("Tungsten", 1.5f),
+            new WeightTuple("Basalt", 1.15f),
+            new WeightTuple("Netherrack", 0.75f),
+            new WeightTuple("Blackstone", 1.1f),
+            new WeightTuple("Stone", 1.3f),
+            new WeightTuple("Dirt", 0.95f),
+            new WeightTuple("Anvil", 1.35f),
+            new WeightTuple("Block", 1.25f),
+            new WeightTuple("Wood", 0.9f),
+            new WeightTuple("Plank|Fence|Gate", 0.8f, true),
+            new WeightTuple("Leaf|Leaves|Feather|Stick|Arrow|Dust|Wire|Sculk|Egg|Paper|Dollar|Fabric|Cloth|Foam|Nugget", 0.1f, true),
+            new WeightTuple("Table", 1.2f),
+            new WeightTuple("Glass|Ice", 0.8f, true),
+            new WeightTuple("Sword", 1.1f),
+            new WeightTuple("Pickaxe|Axe", 1.25f, true),
+            new WeightTuple("Shovel", 1.05f),
+            new WeightTuple("Hoe", 0.95f),
+            new WeightTuple("Metal", 1.25f),
+            new WeightTuple("Ingot", 0.9f),
+            new WeightTuple("Raw", 0.9f),
+            new WeightTuple("Flint", 0.4f),
+            new WeightTuple("Ore|Granite|Diorite|Andesite", 1.225f, true),
+            new WeightTuple("Obsidian|Bedrock|Deepslate|Lead", 1.4f, true), // Changing the (ore) lead's weight affects the leash lead too :/
+            new WeightTuple("Wool", 0.25f),
+            new WeightTuple("Apple|Cooked|Cake|Stew|Fiber|Carbon|Chicken|Beef|Pork|Fish|Salmon|Sushi", 0.5f, true),
+            new WeightTuple("Fungus|Mushroom|Plant|Rubber|Redstone", 0.6f, true),
+            new WeightTuple("Boat", 1.3f),
+            new WeightTuple("Totem", 0.8f)
     );
     // Can't think of a good name, gonna leave it as 'WeightPunishment(s)' for now
     public final List<WeightPunishment> weightPunishments = Arrays.asList(
@@ -94,6 +125,7 @@ public class WeightConfig implements ConfigData {
     }
 
     public enum DisplayType {
+        NONE,
         NUMBERS,
         ICON
     }
