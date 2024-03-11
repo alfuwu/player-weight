@@ -12,19 +12,19 @@ public class WeightClient implements ClientModInitializer {
 	public static float maxWeight = 300.0f;
 	public static boolean affectsCreative = false;
 	private static final Identifier[] ICONS = new Identifier[] {
-			WeightMod.identifier("t0"),
-			WeightMod.identifier("t1"),
-			WeightMod.identifier("t2"),
-			WeightMod.identifier("t3"),
-			WeightMod.identifier("t4"),
-			WeightMod.identifier("t5"),
-			WeightMod.identifier("t6"),
-			WeightMod.identifier("t7"),
-			WeightMod.identifier("t8"),
-			WeightMod.identifier("t9"),
-			WeightMod.identifier("t10"),
-			WeightMod.identifier("t11"),
-			WeightMod.identifier("t12")
+			WeightMod.identifier("textures/hud/t0.png"),
+			WeightMod.identifier("textures/hud/t1.png"),
+			WeightMod.identifier("textures/hud/t2.png"),
+			WeightMod.identifier("textures/hud/t3.png"),
+			WeightMod.identifier("textures/hud/t4.png"),
+			WeightMod.identifier("textures/hud/t5.png"),
+			WeightMod.identifier("textures/hud/t6.png"),
+			WeightMod.identifier("textures/hud/t7.png"),
+			WeightMod.identifier("textures/hud/t8.png"),
+			WeightMod.identifier("textures/hud/t9.png"),
+			WeightMod.identifier("textures/hud/t10.png"),
+			WeightMod.identifier("textures/hud/t11.png"),
+			WeightMod.identifier("textures/hud/t12.png")
 	};
 
 	@Override
@@ -45,6 +45,6 @@ public class WeightClient implements ClientModInitializer {
 		if (type == WeightConfig.DisplayType.NUMBERS) // TODO: make text a smaller font
 			context.drawText(textRenderer, WeightClient.currentWeight + "/" + WeightClient.maxWeight, x + 147 - (textRenderer.getWidth(WeightClient.currentWeight + "/" + WeightClient.maxWeight) / 2), y + 68, 4210752, false);
 		else if (type == WeightConfig.DisplayType.ICON)
-			context.drawGuiTexture(ICONS[MathHelper.clamp(Math.round(WeightClient.currentWeight / (WeightClient.maxWeight != 0 ? WeightClient.maxWeight : 1) * (ICONS.length - 2)), 0, ICONS.length - 1)], x + 128, y + 61, 18, 18);
+			context.drawTexture(ICONS[MathHelper.clamp(Math.round(WeightClient.currentWeight / (WeightClient.maxWeight != 0 ? WeightClient.maxWeight : 1) * (ICONS.length - 2)), 0, ICONS.length - 1)], x + 128, y + 61, 18, 18, 18, 18, 18, 18);
 	}
 }

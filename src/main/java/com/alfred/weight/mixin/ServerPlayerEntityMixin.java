@@ -19,6 +19,7 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
@@ -105,7 +106,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Se
 			for (ItemStack item : inventory)
 				totalWeight += WeightMod.calculateItemWeight(item);
 		if (totalWeight >= this.playerWeight$getMaxWeight() && this.currentWeight < this.playerWeight$getMaxWeight() && WeightConfig.getInstance().weightWarningType != WeightConfig.WarningType.NONE)
-			this.sendMessage(Text.translatable("warning.player-weight.encumbered").withColor(0xFF1111), WeightConfig.getInstance().weightWarningType == WeightConfig.WarningType.CENTERED_MESSAGE);
+			this.sendMessage(Text.translatable("warning.player-weight.encumbered").fillStyle(Style.EMPTY.withColor(0xFF1111)), WeightConfig.getInstance().weightWarningType == WeightConfig.WarningType.CENTERED_MESSAGE);
 		this.currentWeight = totalWeight;
 
 		ServerPlayNetworking.send((ServerPlayerEntity) (Object) this, WeightMod.WEIGHT_PACKET, new PacketByteBuf(Unpooled.copyFloat(this.currentWeight)));
