@@ -12,7 +12,7 @@
   "config.WeightTuple": "Weight Modifier",
   "config.WeightTuple.text": "Text Match",
   "config.WeightTuple.modifier": "Weight Value",
-  "config.WeightTuple.regex": "Use RegEx",
+  "config.WeightTuple.type": "Match Type",
   "config.player-weight.weightPunishments": "Punishments",
   "config.WeightPunishment": "Punishment",
   "config.WeightPunishment.type": "Type",
