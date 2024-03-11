@@ -15,8 +15,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -51,7 +53,7 @@ public class WeightMod implements ModInitializer {
 	public static float calculateItemWeight(ItemStack item) {
 		float itemWeight = CONFIG.globalDefaultWeight * item.getCount();
 		for (WeightConfig.WeightTuple tuple : CONFIG.modifiers)
-			if (find(item, tuple.regex, tuple.text.replace(" ", "_")) || find(item, tuple.regex, tuple.text))
+			if (find(item, tuple.type, tuple.text.replace(" ", "_")) || find(item, tuple.type, tuple.text))
 				itemWeight = CONFIG.weightModifiersAreMultiplicative || tuple.text.equalsIgnoreCase("air") ? itemWeight * tuple.modifier : itemWeight + (tuple.modifier * item.getCount());
 		if (item.hasNbt()) {
 			try {
@@ -69,8 +71,13 @@ public class WeightMod implements ModInitializer {
 		return itemWeight;
 	}
 
-	private static boolean find(ItemStack item, boolean regex, String text) {
-		return regex ? item.getItem().toString().toLowerCase().contains(text.toLowerCase()) : Pattern.compile(text.toLowerCase()).matcher(item.getItem().toString().toLowerCase()).find();
+	private static boolean find(ItemStack item, WeightConfig.MatchType matchType, String text) {
+		return switch (matchType) {
+			case PLAIN -> item.getItem().toString().toLowerCase().contains(text.toLowerCase());
+			case REGEX -> Pattern.compile(text.toLowerCase()).matcher(item.getItem().toString().toLowerCase()).find();
+			case ITEM -> Registries.ITEM.getId(item.getItem()).equals(new Identifier(text)); // if text is set to the ITEM registry's default ID, then this will always be true if the item is not registered
+			case TAG -> item.isIn(TagKey.of(RegistryKeys.ITEM, new Identifier(text)));
+		};
 	}
 
 	public static float scale(ServerPlayerEntityAccessor player, float weight, float value, float start, boolean shouldScale) {

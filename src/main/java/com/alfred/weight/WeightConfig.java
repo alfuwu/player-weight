@@ -25,9 +25,9 @@ public class WeightConfig implements ConfigData {
             new WeightTuple("Air", 0.0f),
             new WeightTuple("Netherite", 1.6f),
             new WeightTuple("Gold", 20.0f),
-            new WeightTuple("Diamond|Emerald|Ruby|Sapphire|Gem", 1.2f, true),
-            new WeightTuple("Golden (Pickaxe|Axe|Shovel|Hoe|Sword)", 0.1f, true), // Undo the massive weight modifier that Gold would apply to these items
-            new WeightTuple("Iron|Steel|Copper|Amethyst|Titanium|Silver|Bronze", 1.15f, true),
+            new WeightTuple("Diamond|Emerald|Ruby|Sapphire|Gem", 1.2f, MatchType.REGEX),
+            new WeightTuple("Golden (Pickaxe|Axe|Shovel|Hoe|Sword)", 0.1f, MatchType.REGEX), // Undo the massive weight modifier that Gold would apply to these items
+            new WeightTuple("Iron|Steel|Copper|Amethyst|Titanium|Silver|Bronze", 1.15f, MatchType.REGEX),
             new WeightTuple("Aluminum", 0.95f),
             new WeightTuple("Tungsten", 1.5f),
             new WeightTuple("Basalt", 1.15f),
@@ -38,23 +38,24 @@ public class WeightConfig implements ConfigData {
             new WeightTuple("Anvil", 1.35f),
             new WeightTuple("Block", 1.25f),
             new WeightTuple("Wood", 0.9f),
-            new WeightTuple("Plank|Fence|Gate", 0.8f, true),
-            new WeightTuple("Leaf|Leaves|Feather|Stick|Arrow|Dust|Wire|Sculk|Egg|Paper|Dollar|Fabric|Cloth|Foam|Nugget", 0.1f, true),
+            new WeightTuple("Plank|Fence|Gate", 0.8f, MatchType.REGEX),
+            new WeightTuple("Leaf|Leaves|Feather|Stick|Arrow|Dust|Wire|Sculk|Egg|Paper|Dollar|Fabric|Cloth|Foam|Nugget", 0.1f, MatchType.REGEX),
             new WeightTuple("Table", 1.2f),
-            new WeightTuple("Glass|Ice", 0.8f, true),
-            new WeightTuple("Sword", 1.1f),
-            new WeightTuple("Pickaxe|Axe", 1.25f, true),
-            new WeightTuple("Shovel", 1.05f),
-            new WeightTuple("Hoe", 0.95f),
+            new WeightTuple("Glass|Ice", 0.8f, MatchType.REGEX),
+            new WeightTuple("minecraft:swords", 1.1f, MatchType.TAG),
+            new WeightTuple("minecraft:pickaxes", 1.25f, MatchType.TAG),
+            new WeightTuple("minecraft:axes", 1.25f, MatchType.TAG),
+            new WeightTuple("minecraft:shovels", 1.05f, MatchType.TAG),
+            new WeightTuple("minecraft:hoes", 0.95f, MatchType.TAG),
             new WeightTuple("Metal", 1.25f),
             new WeightTuple("Ingot", 0.9f),
             new WeightTuple("Raw", 0.9f),
             new WeightTuple("Flint", 0.4f),
-            new WeightTuple("Ore|Granite|Diorite|Andesite", 1.225f, true),
-            new WeightTuple("Obsidian|Bedrock|Deepslate|Lead", 1.4f, true), // Changing the (ore) lead's weight affects the leash lead too :/
+            new WeightTuple("Ore|Granite|Diorite|Andesite", 1.225f, MatchType.REGEX),
+            new WeightTuple("Obsidian|Bedrock|Deepslate|Lead", 1.4f, MatchType.REGEX), // Changing the (ore) lead's weight affects the leash lead too :/
             new WeightTuple("Wool", 0.25f),
-            new WeightTuple("Apple|Cooked|Cake|Stew|Fiber|Carbon|Chicken|Beef|Pork|Fish|Salmon|Sushi", 0.5f, true),
-            new WeightTuple("Fungus|Mushroom|Plant|Rubber|Redstone", 0.6f, true),
+            new WeightTuple("Apple|Cooked|Cake|Stew|Fiber|Carbon|Chicken|Beef|Pork|Fish|Salmon|Sushi", 0.5f, MatchType.REGEX),
+            new WeightTuple("Fungus|Mushroom|Plant|Rubber|Redstone", 0.6f, MatchType.REGEX),
             new WeightTuple("Boat", 1.3f),
             new WeightTuple("Totem", 0.8f)
     );
@@ -80,23 +81,23 @@ public class WeightConfig implements ConfigData {
     public static class WeightTuple implements ConfigData {
         public String text;
         public float modifier;
-        public boolean regex;
+        public MatchType type;
 
         WeightTuple() {
-            this("", 1.0f, false);
+            this("", 1.0f, MatchType.PLAIN);
         }
         WeightTuple(String text, float modifier) {
-            this(text, modifier, false);
+            this(text, modifier, MatchType.PLAIN);
         }
-        WeightTuple(String text, float modifier, boolean regex) {
+        WeightTuple(String text, float modifier, MatchType type) {
             this.text = text;
             this.modifier = modifier;
-            this.regex = regex;
+            this.type = type;
         }
     }
 
     public static class WeightPunishment {
-        @ConfigEntry.Gui.EnumHandler
+        //@ConfigEntry.Gui.EnumHandler // this is broken for complex lists in Cloth Config
         public PunishmentType type;
         public Float value;
         @Comment("This is a percentage of the player's max weight in which the punishment will take effect")
@@ -134,5 +135,12 @@ public class WeightConfig implements ConfigData {
         NONE,
         CENTERED_MESSAGE,
         CHAT_MESSAGE
+    }
+
+    public enum MatchType {
+        PLAIN, // plain text matching (literal matching)
+        REGEX, // regular expressions
+        ITEM, // specific item id
+        TAG // a tag id
     }
 }
