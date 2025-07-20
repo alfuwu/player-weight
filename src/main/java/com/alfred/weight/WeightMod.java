@@ -6,23 +6,19 @@ import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.fabricmc.api.ModInitializer;
 
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
+import net.minecraft.util.registry.Registry;
 
 import java.util.regex.Pattern;
 
 public class WeightMod implements ModInitializer {
 	private static WeightConfig CONFIG;
-	public static final RegistryKey<DamageType> TOO_HEAVY = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, identifier("too_heavy"));
+	public static final DamageSource TOO_HEAVY = new DamageSource("too_heavy").setBypassesArmor().setBypassesProtection().setUnblockable();
 	public static final Identifier WEIGHT_PACKET = identifier("player_weight_update");
 	public static final Identifier WEIGHT_MAX_PACKET = identifier("player_max_weight_update");
 	public static final Identifier CREATIVE_MODE_UPDATE = identifier("creative_update");
@@ -65,8 +61,8 @@ public class WeightMod implements ModInitializer {
 		return switch (matchType) {
 			case PLAIN -> item.getItem().toString().toLowerCase().contains(text.toLowerCase());
 			case REGEX -> Pattern.compile(text.toLowerCase()).matcher(item.getItem().toString().toLowerCase()).find();
-			case ITEM -> Registries.ITEM.getId(item.getItem()).equals(new Identifier(text)); // if text is set to the ITEM registry's default ID, then this will always be true if the item is not registered
-			case TAG -> item.isIn(TagKey.of(RegistryKeys.ITEM, new Identifier(text)));
+			case ITEM -> Registry.ITEM.getId(item.getItem()).equals(new Identifier(text)); // if text is set to the ITEM registry's default ID, then this will always be true if the item is not registered
+			case TAG -> item.isIn(TagKey.of(Registry.ITEM_KEY, new Identifier(text)));
 		};
 	}
 
@@ -76,9 +72,5 @@ public class WeightMod implements ModInitializer {
 			return value * ratio;
 		}
 		return value;
-	}
-
-	public static DamageSource tooHeavy(World world) {
-		return new DamageSource(world.getRegistryManager().get(RegistryKeys.DAMAGE_TYPE).entryOf(TOO_HEAVY));
 	}
 }

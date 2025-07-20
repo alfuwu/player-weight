@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.encryption.PlayerPublicKey;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Style;
@@ -23,20 +24,20 @@ import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.*;
 
 @Mixin(ServerPlayerEntity.class)
 public abstract class ServerPlayerEntityMixin extends PlayerEntity implements ServerPlayerEntityAccessor {
 	@Shadow public abstract boolean damage(DamageSource source, float amount);
-	@Shadow public abstract ServerWorld getServerWorld();
+	@Shadow public abstract ServerWorld getWorld();
 	@Shadow public abstract boolean isCreative();
 	@Shadow public abstract void sendMessage(Text message, boolean overlay);
 
@@ -48,8 +49,8 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Se
 	@Unique private EntityAttributeModifier playerSpeedModifier = new EntityAttributeModifier(SPEED_WEIGHT_UUID, "Player weight speed modifier", 0.0, EntityAttributeModifier.Operation.MULTIPLY_TOTAL);
 	@Unique private List<List<ItemStack>> oldInventory = new ArrayList<>();
 
-	public ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
-		super(world, pos, yaw, gameProfile);
+	public ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile gameProfile, @Nullable PlayerPublicKey publicKey) {
+		super(world, pos, yaw, gameProfile, publicKey);
 	}
 
 	@Inject(method = "readCustomDataFromNbt", at = @At("HEAD"))
@@ -128,9 +129,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Se
 				for (WeightConfig.WeightPunishment punishment : config.weightPunishments) {
 					if (this.currentWeight > punishment.begin * this.playerWeight$getMaxWeight()) {
 						if (punishment.type == WeightConfig.PunishmentType.DAMAGE_PER_SECOND)
-							this.damage(WeightMod.tooHeavy(this.getServerWorld()), WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
+							this.damage(WeightMod.TOO_HEAVY, WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
 						else if (punishment.type == WeightConfig.PunishmentType.DAMAGE_PER_SECOND_MOUNT && this.hasVehicle())
-							this.getVehicle().damage(WeightMod.tooHeavy(this.getVehicle().getWorld()), WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
+							this.getVehicle().damage(WeightMod.TOO_HEAVY, WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
 						else if (punishment.type == WeightConfig.PunishmentType.EXHAUSTION_PER_SECOND)
 							this.hungerManager.addExhaustion(WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
 					}
@@ -159,9 +160,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Se
 				for (WeightConfig.WeightPunishment punishment : config.weightPunishments) {
 					if (this.currentWeight > punishment.begin * this.playerWeight$getMaxWeight()) {
 						if (punishment.type == WeightConfig.PunishmentType.DAMAGE_PER_SECOND)
-							this.damage(WeightMod.tooHeavy(this.getServerWorld()), WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
+							this.damage(WeightMod.TOO_HEAVY, WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
 						else if (punishment.type == WeightConfig.PunishmentType.DAMAGE_PER_SECOND_MOUNT && this.hasVehicle())
-							this.getVehicle().damage(WeightMod.tooHeavy(this.getVehicle().getWorld()), WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
+							this.getVehicle().damage(WeightMod.TOO_HEAVY, WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight));
 						else if (punishment.type == WeightConfig.PunishmentType.SPEED)
 							speedModifier *= WeightMod.scale(this, this.currentWeight, punishment.value, punishment.begin, punishment.scaleWithWeight);
 						else if (punishment.type == WeightConfig.PunishmentType.EXHAUSTION_PER_SECOND)
@@ -191,18 +192,19 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Se
 		oldAffectsCreative = config.affectsCreativeModePlayers;
 	}
 
-	@Inject(method = "startRiding", at = @At("HEAD"), cancellable = true)
-	private void murderMount(Entity entity, boolean force, CallbackInfoReturnable<Boolean> cir) {
+	@Override
+	public boolean startRiding(Entity entity, boolean force) {
 		WeightConfig config = WeightConfig.getInstance();
 		if (config.affectsCreativeModePlayers || !this.isCreative()) {
 			for (WeightConfig.WeightPunishment punishment : WeightConfig.getInstance().weightPunishments) {
 				if (this.currentWeight > punishment.begin * this.playerWeight$getMaxWeight()) {
 					if (punishment.type == WeightConfig.PunishmentType.PREVENT_MOUNT)
-						cir.setReturnValue(false); // Prevent mounting
+						return false; // Prevent mounting
 					else if (punishment.type == WeightConfig.PunishmentType.KILL_MOUNT)
-						entity.damage(WeightMod.tooHeavy(entity.getWorld()), Float.MAX_VALUE);
+						entity.damage(WeightMod.TOO_HEAVY, Float.MAX_VALUE);
 				}
 			}
 		}
+		return super.startRiding(entity, force);
 	}
 }
