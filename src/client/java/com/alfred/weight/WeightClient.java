@@ -3,9 +3,12 @@ package com.alfred.weight;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+
+import static com.mojang.blaze3d.systems.RenderSystem.setShaderTexture;
+import static net.minecraft.client.gui.DrawableHelper.drawTexture;
 
 public class WeightClient implements ClientModInitializer {
 	public static float currentWeight = 0.0f;
@@ -34,11 +37,12 @@ public class WeightClient implements ClientModInitializer {
 		);
 	}
 
-	public static void render(DrawContext context, TextRenderer textRenderer, int x, int y) {
+	public static void render(MatrixStack stack, TextRenderer textRenderer, int x, int y) {
 		WeightConfig.DisplayType type = WeightConfig.getInstance().displayType;
 		if (type == WeightConfig.DisplayType.NUMBERS) // TODO: make text a smaller font
-			context.drawText(textRenderer, WeightClient.currentWeight + "/" + WeightClient.maxWeight, x + 147 - (textRenderer.getWidth(WeightClient.currentWeight + "/" + WeightClient.maxWeight) / 2), y + 68, 4210752, false);
+			textRenderer.drawWithShadow(stack, WeightClient.currentWeight + "/" + WeightClient.maxWeight, x + 147 - (textRenderer.getWidth(WeightClient.currentWeight + "/" + WeightClient.maxWeight) / 2), y + 68, 4210752, false);
 		else if (type == WeightConfig.DisplayType.ICON)
-			context.drawTexture(ICONS[MathHelper.clamp(Math.round(WeightClient.currentWeight / (WeightClient.maxWeight != 0 ? WeightClient.maxWeight : 1) * (ICONS.length - 2)), 0, ICONS.length - 1)], x + 131, y + 64, 12, 12, 12, 12, 12, 12);
+			setShaderTexture(0, ICONS[MathHelper.clamp(Math.round(WeightClient.currentWeight / (WeightClient.maxWeight != 0 ? WeightClient.maxWeight : 1) * (ICONS.length - 2)), 0, ICONS.length - 1)]);
+			drawTexture(stack, x + 131, y + 64, 12, 12, 12, 12, 12, 12);
 	}
 }
